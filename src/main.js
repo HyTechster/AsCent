@@ -131,7 +131,25 @@ function wireHelp() {
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 }
 
+// iOS Safari ignores `user-scalable=no`, so a tapping game gets zoomed by
+// double-taps and pinches. touch-action (CSS) handles most double-tap zoom;
+// these listeners stop the rest: pinch (gesture* events) and the stray
+// double-tap. Taps are counted on pointerdown, so blocking the synthetic
+// double-tap click never loses a tap.
+function blockZoomGestures() {
+  ["gesturestart", "gesturechange", "gestureend"].forEach((ev) =>
+    document.addEventListener(ev, (e) => e.preventDefault(), { passive: false })
+  );
+  let lastTouch = 0;
+  document.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - lastTouch <= 300) e.preventDefault();
+    lastTouch = now;
+  }, { passive: false });
+}
+
 async function boot() {
+  blockZoomGestures();
   initSky();                     // twinkling starfield runs on every screen
   wireAuth();
   wireHelp();

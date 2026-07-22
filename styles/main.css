@@ -36,6 +36,10 @@ body {
   color: var(--ink);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.55;
+  /* iOS: kill the double-tap-to-zoom on this tapping game (fast taps anywhere
+     should register as taps, never as a zoom gesture). Pinch is blocked in JS. */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
   /* sticky-footer column: the credit's margin-top:auto pushes it to the bottom */
   min-height: 100vh; display: flex; flex-direction: column; align-items: center;
 }
