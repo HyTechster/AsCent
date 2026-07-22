@@ -10,7 +10,7 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 export const CLICK_BATCH_MS = 250;
 
 // How many top scores to show.
-export const LEADERBOARD_LIMIT = 20;
+export const LEADERBOARD_LIMIT = 10;
 
 // Auto-refresh the leaderboard on this interval (ms). It also refreshes whenever
 // you return to the tab. Kept modest so it isn't a constant load on the DB.

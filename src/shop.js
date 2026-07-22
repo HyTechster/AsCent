@@ -141,11 +141,14 @@ function renderUpgrades(state, upgrades) {
     const gain = up.kind === "tap"
       ? Number(up.effect) * (maxed ? level : level + 1)
       : Number(up.effect);
+    // sub-cent gains (early hustle levels) need more precision than fmtMoney's 2dp,
+    // otherwise a real +$0.003 would render as "+$0.00".
+    const gainLabel = gain > 0 && gain < 0.01 ? "$" + gain.toFixed(3) : fmtMoney(gain);
     const { el, btn } = row({
       icon: `assets/icon-${up.id}.png`,
       name: up.name,
       chip: maxed ? `Lv ${level} · MAX` : `Lv ${level}`,
-      sub: `+${fmtMoney(gain)} ${up.kind === "tap" ? "/ tap" : "/ 30s"}`,
+      sub: `+${gainLabel} ${up.kind === "tap" ? "/ tap" : "/ 30s"}`,
       btnLabel: maxed ? "MAX" : fmtMoney(cost),
       affordable: afford,
       disabled: maxed || !afford,

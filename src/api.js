@@ -35,7 +35,9 @@ export async function getProfile() {
 }
 
 // --- public reads ----------------------------------------------------------
-export const getLeaderboard = (limit = 20) => rpc("get_leaderboard", { p_limit: limit });
+export const getLeaderboard = (limit = 10) => rpc("get_leaderboard", { p_limit: limit });
+// the caller's own standing across all players (for the "you are #N" row)
+export const getMyRank = () => rpc("get_my_rank");
 
 // The shop's price lists. These tables are public-read; the server still
 // recomputes every price on purchase, so reading them here is display-only.

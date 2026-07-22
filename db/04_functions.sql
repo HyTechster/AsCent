@@ -20,8 +20,8 @@
 -- ---- tunable server constants (change here, they are not client-visible) ---
 --   MAX_CPS            = 20      clicks/sec ceiling (autoclicker cap)
 --   BASE_TAP           = 0.01    dollars earned per click at tap level 0
---   HUSTLE_STEP        = 0.006   scaling: the Nth Side Hustle level adds $0.006 x N
---                                (total 0.006*L*(L+1)/2; gentle early, ~$30 at level 100)
+--   HUSTLE_STEP        = 0.003   scaling: the Nth Side Hustle level adds $0.003 x N
+--                                (total 0.003*L*(L+1)/2; gentle early, ~$15 at level 100)
 --   LEVEL_DIVISOR      = 3       level = 1 + floor(sqrt(net_worth)/3)
 --   IDLE_CAP_SECONDS   = 28800   never pay more than 8h of idle at once
 --   CLICK_BURST_CAP    = 200     max clicks credited in a single do_click call
@@ -127,9 +127,9 @@ begin
     'method_multiplier',  coalesce(v_method.multiplier, 1),
     'booster_multiplier', v_boost,
     -- money per tap: rank bonus + hustle are summed FIRST, then the whole base is
-    -- scaled by method x booster. Hustle SCALES gently: the Nth level adds $0.006 x N,
-    -- so total = 0.006 * L*(L+1)/2 (e.g. L15 ~ $0.72, L50 ~ $7.65, L100 ~ $30.30).
-    'per_tap',           (coalesce(v_rankbonus, 0) + 0.01 + 0.006 * v.tap_level * (v.tap_level + 1) / 2) * coalesce(v_method.multiplier, 1) * v_boost,
+    -- scaled by method x booster. Hustle SCALES gently: the Nth level adds $0.003 x N,
+    -- so total = 0.003 * L*(L+1)/2 (e.g. L15 ~ $0.36, L50 ~ $3.83, L100 ~ $15.15).
+    'per_tap',           (coalesce(v_rankbonus, 0) + 0.01 + 0.003 * v.tap_level * (v.tap_level + 1) / 2) * coalesce(v_method.multiplier, 1) * v_boost,
     -- passive income per 30s: $0.01 per drone level, times the method multiplier
     'idle_rate',         v.drone_level * 0.01 * coalesce(v_method.multiplier, 1),
     'server_now',        v_now,
@@ -248,8 +248,8 @@ begin
   select coalesce(tap_bonus, 0) into v_rankbonus from ranks where id = v.rank_id;
 
   -- rank bonus + hustle summed first, then scaled by method x booster.
-  -- Hustle scales gently: Nth level adds $0.006 x N, total = 0.006 * L*(L+1)/2.
-  v_pertap := (coalesce(v_rankbonus, 0) + 0.01 + 0.006 * v.tap_level * (v.tap_level + 1) / 2) * coalesce(v_method.multiplier, 1) * v_boost;
+  -- Hustle scales gently: Nth level adds $0.003 x N, total = 0.003 * L*(L+1)/2.
+  v_pertap := (coalesce(v_rankbonus, 0) + 0.01 + 0.003 * v.tap_level * (v.tap_level + 1) / 2) * coalesce(v_method.multiplier, 1) * v_boost;
 
   update player_state set last_click_at = v_now where user_id = v_uid;
   perform apply_earn(v_uid, v_granted * v_pertap);

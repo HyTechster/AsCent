@@ -24,16 +24,17 @@ on conflict (id) do update set
 
 -- UPGRADES:
 --   tap   -> dollars per click  = ($0.01 base + hustle) * place_mult * booster
---             where hustle SCALES gently: the Nth level adds $0.006 x N, so total
---             after L levels = 0.006 * L*(L+1)/2 (L15 ~ $0.72, L50 ~ $7.65, L100 ~ $30).
---             `effect` holds the per-level step (0.006); the client multiplies it by
+--             where hustle SCALES gently: the Nth level adds $0.003 x N, so total
+--             after L levels = 0.003 * L*(L+1)/2 (L15 ~ $0.36, L50 ~ $3.83, L100 ~ $15).
+--             `effect` holds the per-level step (0.003); the client multiplies it by
 --             the next level to show its real gain.
 --   drone -> passive $/sec      = (drone_level * $0.01) * place_mult  (flat effect)
 -- Cost of the NEXT level = base_cost * growth ^ current_level.
--- Side Hustle is the main grind: each level is worth MORE than the last, but kept
--- gentle early so it doesn't rocket the first levels (level 15 ~ $0.72/tap, not $3).
+-- Side Hustle is the main grind. Its cost climbs FASTER (growth 1.20) than its
+-- per-tap payoff, so each level takes real taps to afford (~18-50 early-mid, into
+-- the hundreds later) instead of being buyable every 2-3 taps.
 insert into upgrades (id, kind, name, base_cost, growth, effect, max_level, sort) values
-  ('hustle', 'tap',   'Side Hustle',     0.20, 1.15, 0.006, 100, 0),
+  ('hustle', 'tap',   'Side Hustle',     0.50, 1.20, 0.003, 100, 0),
   ('invest', 'drone', 'Auto Investment', 2.00, 1.18, 0.01,  100, 1)
 on conflict (id) do update set
   kind = excluded.kind, name = excluded.name, base_cost = excluded.base_cost,
