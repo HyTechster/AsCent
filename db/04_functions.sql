@@ -20,6 +20,8 @@
 -- ---- tunable server constants (change here, they are not client-visible) ---
 --   MAX_CPS            = 20      clicks/sec ceiling (autoclicker cap)
 --   BASE_TAP           = 0.01    dollars earned per click at tap level 0
+--   HUSTLE_STEP        = 0.025   scaling: the Nth Side Hustle level adds $0.025 x N
+--                                (total 0.025*L*(L+1)/2; level 100 adds $2.50 = Jutawan)
 --   LEVEL_DIVISOR      = 3       level = 1 + floor(sqrt(net_worth)/3)
 --   IDLE_CAP_SECONDS   = 28800   never pay more than 8h of idle at once
 --   CLICK_BURST_CAP    = 200     max clicks credited in a single do_click call
@@ -124,8 +126,10 @@ begin
     'current_method_id',  v.current_method_id,
     'method_multiplier',  coalesce(v_method.multiplier, 1),
     'booster_multiplier', v_boost,
-    -- money per tap: (base $0.01, +$0.01 per tap level) x method x booster, PLUS the flat rank bonus
-    'per_tap',           (1 + v.tap_level) * 0.01 * coalesce(v_method.multiplier, 1) * v_boost + coalesce(v_rankbonus, 0),
+    -- money per tap: rank bonus + hustle are summed FIRST, then the whole base is
+    -- scaled by method x booster. Hustle SCALES: the Nth level adds $0.025 x N, so
+    -- total = 0.025 * L*(L+1)/2. The final level (100) adds $2.50 = the Jutawan bonus.
+    'per_tap',           (coalesce(v_rankbonus, 0) + 0.01 + 0.025 * v.tap_level * (v.tap_level + 1) / 2) * coalesce(v_method.multiplier, 1) * v_boost,
     -- passive income per 30s: $0.01 per drone level, times the method multiplier
     'idle_rate',         v.drone_level * 0.01 * coalesce(v_method.multiplier, 1),
     'server_now',        v_now,
@@ -243,7 +247,9 @@ begin
 
   select coalesce(tap_bonus, 0) into v_rankbonus from ranks where id = v.rank_id;
 
-  v_pertap := (1 + v.tap_level) * 0.01 * coalesce(v_method.multiplier, 1) * v_boost + coalesce(v_rankbonus, 0);
+  -- rank bonus + hustle summed first, then scaled by method x booster.
+  -- Hustle scales: Nth level adds $0.025 x N, total = 0.025 * L*(L+1)/2.
+  v_pertap := (coalesce(v_rankbonus, 0) + 0.01 + 0.025 * v.tap_level * (v.tap_level + 1) / 2) * coalesce(v_method.multiplier, 1) * v_boost;
 
   update player_state set last_click_at = v_now where user_id = v_uid;
   perform apply_earn(v_uid, v_granted * v_pertap);

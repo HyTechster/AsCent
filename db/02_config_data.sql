@@ -21,12 +21,17 @@ on conflict (id) do update set
   multiplier = excluded.multiplier, sort = excluded.sort;
 
 -- UPGRADES:
---   tap   -> dollars per click  = (1 + tap_level) * $0.01 * place_mult * booster
---   drone -> passive $/sec      = (drone_level * $0.01) * place_mult
+--   tap   -> dollars per click  = ($0.01 base + hustle) * place_mult * booster
+--             where hustle SCALES: the Nth level adds $0.025 x N, so total after L
+--             levels = 0.025 * L*(L+1)/2. `effect` holds the per-level step (0.025);
+--             the client multiplies it by the next level to show its real gain.
+--   drone -> passive $/sec      = (drone_level * $0.01) * place_mult  (flat effect)
 -- Cost of the NEXT level = base_cost * growth ^ current_level.
+-- Side Hustle is the main grind: each level is worth MORE than the last, and the
+-- final level (100) adds $2.50/tap = the Jutawan prestige bonus.
 insert into upgrades (id, kind, name, base_cost, growth, effect, max_level, sort) values
-  ('hustle', 'tap',   'Side Hustle',     0.50, 1.15, 0.01, 100, 0),
-  ('invest', 'drone', 'Auto Investment', 2.00, 1.18, 0.01, 100, 1)
+  ('hustle', 'tap',   'Side Hustle',     1.25, 1.15, 0.025, 100, 0),
+  ('invest', 'drone', 'Auto Investment', 2.00, 1.18, 0.01,  100, 1)
 on conflict (id) do update set
   kind = excluded.kind, name = excluded.name, base_cost = excluded.base_cost,
   growth = excluded.growth, effect = excluded.effect,
@@ -44,20 +49,23 @@ on conflict (id) do update set
 -- King (Yang di-Pertuan Agong). A rank is BUYABLE once you hit min_level; buying
 -- it spends balance and sets it as your title. cost/min_level climb up the ladder.
 -- tap_bonus = flat dollars added to EACH tap while you hold the rank (prestige).
--- It ramps hard on the top ranks so the late game snowballs toward Bilionair.
+-- Since per_tap = (rank_bonus + hustle) x method x booster, this bonus gets
+-- multiplied by your method (up to 12x) and booster (up to 3x). So it is kept
+-- SMALL on purpose: a few cents through mid game, only a few dollars at the very
+-- top. Rank is a steady prestige perk; Side Hustle is the real per-tap driver.
 insert into ranks (id, name, cost, min_level, tap_bonus, sort) values
-  ('rakyat',          'Rakyat',           0,          1,     0,       0),
-  ('anak_dato',       'Anak Dato',        15,         3,     0.05,    1),
-  ('anak_tan_sri',    'Anak Tan Sri',     100,        6,     0.25,    2),
-  ('ceo',             'CEO',              500,        12,    1.5,     3),
-  ('dato',            'Dato',             1800,       22,    8,       4),
-  ('tan_sri',         'Tan Sri',          4500,       35,    40,      5),
-  ('menteri',         'Menteri',          12000,      55,    150,     6),
-  ('perdana_menteri', 'Perdana Menteri',  25000,      80,    600,     7),
+  ('rakyat',          'Rakyat',           0,          1,     0,      0),
+  ('anak_dato',       'Anak Dato',        15,         3,     0.02,   1),
+  ('anak_tan_sri',    'Anak Tan Sri',     100,        6,     0.05,   2),
+  ('ceo',             'CEO',              500,        12,    0.10,   3),
+  ('dato',            'Dato',             1800,       22,    0.20,   4),
+  ('tan_sri',         'Tan Sri',          4500,       35,    0.40,   5),
+  ('menteri',         'Menteri',          12000,      55,    0.70,   6),
+  ('perdana_menteri', 'Perdana Menteri',  25000,      80,    1.20,   7),
   -- Jutawan unlocks at $1,000,000 net worth (level 334),
   -- Bilionair at $1,000,000,000 net worth (level 10541).
-  ('jutawan',         'Jutawan',          250000,     334,   3000,    8),
-  ('bilionair',       'Bilionair',        250000000,  10541, 250000,  9)
+  ('jutawan',         'Jutawan',          250000,     334,   2.50,   8),
+  ('bilionair',       'Bilionair',        250000000,  10541, 5.00,   9)
 on conflict (id) do update set
   name = excluded.name, cost = excluded.cost, min_level = excluded.min_level,
   tap_bonus = excluded.tap_bonus, sort = excluded.sort;

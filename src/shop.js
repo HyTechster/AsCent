@@ -136,11 +136,16 @@ function renderUpgrades(state, upgrades) {
     const maxed = isMaxed(up, state);
     const cost = upgradeCost(up, state);
     const afford = Number(state.balance) >= cost;
+    // Side Hustle (tap) scales: the Nth level adds effect x N. Show the gain of the
+    // NEXT level you'd buy (or the final level's gain once maxed). Drone is flat.
+    const gain = up.kind === "tap"
+      ? Number(up.effect) * (maxed ? level : level + 1)
+      : Number(up.effect);
     const { el, btn } = row({
       icon: `assets/icon-${up.id}.png`,
       name: up.name,
       chip: maxed ? `Lv ${level} · MAX` : `Lv ${level}`,
-      sub: `+${fmtMoney(up.effect)} ${up.kind === "tap" ? "/ tap" : "/ 30s"}`,
+      sub: `+${fmtMoney(gain)} ${up.kind === "tap" ? "/ tap" : "/ 30s"}`,
       btnLabel: maxed ? "MAX" : fmtMoney(cost),
       affordable: afford,
       disabled: maxed || !afford,
