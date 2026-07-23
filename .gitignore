@@ -6,6 +6,8 @@ emsdk/
 .DS_Store
 Thumbs.db
 *.swp
+.claude
+design
 
 # Local env / secrets (never commit real keys)
 .env
