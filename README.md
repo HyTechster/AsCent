@@ -1,4 +1,4 @@
-# SkimCepatKaya — a money clicker (C++/WebAssembly + Supabase)
+# AsCent — a money clicker (C++/WebAssembly + Supabase)
 
 Tap to earn money. Every tap adds **$0.01** to your **balance** (spendable cash)
 and your **net worth** (total ever earned). Spend the balance on **upgrades**,
